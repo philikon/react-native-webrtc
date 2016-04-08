@@ -18,6 +18,81 @@ var RTCEvent = require('./RTCEvent');
 
 import type RTCSessionDescription from './RTCSessionDescription';
 
+type RTCIceServer = {
+  urls: string | Array<string>;
+  username?: string;
+  credential?: string;
+  credentialType?: 'password' | 'token';
+};
+
+type RTCIceTransportPolicy =
+  'public' |
+  'relay' |
+  'all';
+
+type RTCBundlePolicy =
+  'balanced' |
+  'max-compat' |
+  'max-bundle';
+
+type RTCRtcpMuxPolicy =
+  'negotiate' |
+  'require';
+
+type RTCCertficate = {
+  expires: number;
+};
+
+type RTCConfiguration = {
+  iceServers?: Array<RTCIceServer>;
+  iceTransportPolicy?: RTCIceTransportPolicy;
+  bundlePolicy?: RTCBundlePolicy;
+  rtcpMuxPolicy?: RTCRtcpMuxPolicy;
+  peerIdentity?: string;
+  certificate?: RTCCertificate;
+  iceCandidatePoolSize?: number;
+};
+
+type RTCSignalingState =
+  'stable' |
+  'have-local-offer' |
+  'have-remote-offer' |
+  'have-local-pranswer' |
+  'have-remote-pranswer' |
+  'closed';
+
+type RTCIceGatheringState =
+  'new' |
+  'gathering' |
+  'complete';
+
+type RTCIceConnectionState =
+  'new' |
+  'checking' |
+  'connected' |
+  'completed' |
+  'failed' |
+  'disconnected' |
+  'closed';
+
+type RTCPeerConnectionState =
+  'new' |
+  'connecting' |
+  'connected' |
+  'disconnected' |
+  'failed';
+
+type RTCSdpType =
+  'offer' |
+  'pranswer' |
+  'answer' |
+  'rollback';
+
+type RTCSessionDescriptionInit = {
+  type: RTCSdpType;
+  sdp?: string;
+};
+
 const PEER_CONNECTION_EVENTS = [
   'connectionstatechange',
   'icecandidate',
@@ -34,8 +109,18 @@ const PEER_CONNECTION_EVENTS = [
 let nextPeerConnectionId = 0;
 
 class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
-  localDescription: RTCSessionDescription;
-  remoteDescription: RTCSessionDescription;
+  localDescription: ?RTCSessionDescription = null;
+  currentLocalDescription: ?RTCSessionDescription = null;
+  pendingLocalDescription: ?RTCSessionDescription = null;
+
+  remoteDescription: ?RTCSessionDescription = null;
+  currentRemoteDescription: ?RTCSessionDescription = null;
+  pendingRemoteDescription: ?RTCSessionDescription = null;
+
+  signalingState: RTCSignalingState = 'stable';
+  iceGatheringState: RTCIceGatheringState = 'new';
+  iceConnectionState: RTCIceConnectionState = 'new';
+  connectionState: RTCPeerConnectionState = 'new';
 
   onconnectionstatechange: ?Function;
   onicecandidate: ?Function;
@@ -53,19 +138,19 @@ class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
   _remoteStreams: Array<MediaStream> = [];
   _subscriptions: Array<any>;
 
-  constructor(configuration) {
+  constructor(configuration: RTCConfiguration) {
     super();
     this._peerConnectionId = nextPeerConnectionId++;
     WebRTCModule.peerConnectionInit(configuration, this._peerConnectionId);
     this._registerEvents(this._peerConnectionId);
   }
 
-  addStream(stream) {
+  addStream(stream: MediaStream) {
     WebRTCModule.peerConnectionAddStream(stream._streamId, this._peerConnectionId);
     this._localStreams.push(stream);
   }
 
-  removeStream(stream) {
+  removeStream(stream: MediaStream) {
     var index = this._localStreams.indexOf(stream);
     if (index > -1) {
       this._localStreams.splice(index, 1);
@@ -73,7 +158,7 @@ class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
     WebRTCModule.peerConnectionRemoveStream(stream._streamId, this._peerConnectionId);
   }
 
-  createOffer(success: ?Function, failure: ?Function, constraints) {
+  createOffer(options): Promise<RTCSessionDescription> {
     WebRTCModule.peerConnectionCreateOffer(this._peerConnectionId, (successful, data) => {
       if (successful) {
         var sessionDescription = new RTCSessionDescription(data);
