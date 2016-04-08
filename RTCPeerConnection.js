@@ -93,6 +93,10 @@ type RTCSessionDescriptionInit = {
   sdp?: string;
 };
 
+type RTCOfferOptions = {
+  // TODO
+};
+
 const PEER_CONNECTION_EVENTS = [
   'connectionstatechange',
   'icecandidate',
@@ -158,15 +162,10 @@ class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
     WebRTCModule.peerConnectionRemoveStream(stream._streamId, this._peerConnectionId);
   }
 
-  createOffer(options): Promise<RTCSessionDescription> {
-    WebRTCModule.peerConnectionCreateOffer(this._peerConnectionId, (successful, data) => {
-      if (successful) {
-        var sessionDescription = new RTCSessionDescription(data);
-        success(sessionDescription);
-      } else {
-        failure(data); // TODO: convert to NavigatorUserMediaError
-      }
-    });
+  createOffer(options?: RTCOfferOptions): Promise<RTCSessionDescription> {
+    // TODO convert failure to OperationError
+    return WebRTCModule.peerConnectionCreateOffer(this._peerConnectionId)
+      .then((data) => new RTCSessionDescription(data));
   }
 
   createAnswer(success: ?Function, failure: ?Function, constraints) {
