@@ -26,5 +26,6 @@
 @property (nonatomic, strong) NSMutableDictionary<NSString *, RTCMediaStream *> *mediaStreams;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, RTCMediaStreamTrack *> *tracks;
 @property (nonatomic, strong) NSMutableDictionary<NSNumber *, RTCDataChannel *> *dataChannels;
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSNumber *> *dataChannelBinaryTypeIsBlob;
 
 @end

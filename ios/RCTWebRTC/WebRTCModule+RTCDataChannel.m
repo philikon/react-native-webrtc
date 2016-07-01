@@ -3,6 +3,8 @@
 #import "RCTBridge.h"
 #import "RCTEventDispatcher.h"
 
+#import "SLKBlobManager.h"
+
 #import "WebRTCModule+RTCDataChannel.h"
 #import <WebRTC/RTCDataChannelConfiguration.h>
 
@@ -43,6 +45,11 @@ RCT_EXPORT_METHOD(dataChannelClose:(nonnull NSNumber *)dataChannelId
   [self.dataChannels removeObjectForKey:dataChannelId];
 })
 
+RCT_EXPORT_METHOD(dataChannelSetBinaryType:(nonnull NSNumber *)dataChannelId binaryType:(NSString *)binaryType)
+{
+  [self.dataChannelBinaryTypeIsBlob setObject:@([binaryType isEqualToString:@"blob"]) forKey:dataChannelId];
+}
+
 - (NSString *)stringForDataChannelState:(RTCDataChannelState)state
 {
   switch (state) {
@@ -68,11 +75,27 @@ RCT_EXPORT_METHOD(dataChannelClose:(nonnull NSNumber *)dataChannelId
 // Called when a data buffer was successfully received.
 - (void)dataChannel:(RTCDataChannel *)channel didReceiveMessageWithBuffer:(RTCDataBuffer *)buffer
 {
-  NSString *data = buffer.isBinary ?
-    [buffer.data base64EncodedStringWithOptions:0] :
-    [[NSString alloc] initWithData:buffer.data encoding:NSUTF8StringEncoding];
+  NSString *type = @"text";
+  id data;
+  if (buffer.isBinary) {
+    if ([self.dataChannelBinaryTypeIsBlob objectForKey:@(channel.channelId)]) {
+      SLKBlobManager *blobManager = [[self bridge] moduleForClass:[SLKBlobManager class]];
+      NSString *blobId = [blobManager store:buffer.data];
+      data = @{
+        @"blobId": blobId,
+        @"offset": @0,
+        @"size": @(buffer.data.length)
+      };
+      type = @"blob";
+    } else {
+      data = [buffer.data base64EncodedStringWithOptions:0];
+      type = @"binary";
+    }
+  } else {
+    data = [[NSString alloc] initWithData:buffer.data encoding:NSUTF8StringEncoding];
+  }
   NSDictionary *event = @{@"id": @(channel.channelId),
-                          @"type": buffer.isBinary ? @"binary" : @"text",
+                          @"type": type,
                           @"data": data};
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"dataChannelReceiveMessage"
                                                   body:event];
