@@ -242,8 +242,8 @@
 					"$(PROJECT_DIR)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../react-native/React/**",
-					"$(SRCROOT)/../../silk-react-native-blobs/ios/**",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../pub/react-native-blobs/ios/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -263,8 +263,8 @@
 					"$(PROJECT_DIR)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../react-native/React/**",
-					"$(SRCROOT)/../../silk-react-native-blobs/ios/**",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../pub/react-native-blobs/ios/**",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
