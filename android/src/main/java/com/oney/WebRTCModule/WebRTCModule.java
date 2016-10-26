@@ -31,6 +31,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +75,10 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
     public WebRTCModule(ReactApplicationContext reactContext) {
         super(reactContext);
+
+        // Enable this line to get incredibly detailed logs from WebRTC.
+        // This should remain disabled for production builds.
+        //Logging.enableTracing("logcat:", EnumSet.of(Logging.TraceLevel.TRACE_DEFAULT), Logging.Severity.LS_VERBOSE);
 
         mPeerConnections = new SparseArray<PeerConnection>();
         mMediaStreams = new HashMap<String, MediaStream>();

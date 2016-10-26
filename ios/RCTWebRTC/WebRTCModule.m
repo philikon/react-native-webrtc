@@ -11,6 +11,8 @@
 #import "RCTEventDispatcher.h"
 #import "RCTUtils.h"
 
+#import <WebRTC/RTCLogging.h>
+
 #import "WebRTCModule.h"
 
 @interface WebRTCModule ()
@@ -27,6 +29,10 @@
   if (self) {
     _peerConnectionFactory = [RTCPeerConnectionFactory new];
 //    [RTCPeerConnectionFactory initializeSSL];
+
+    // Enable this line to get incredibly detailed logs from WebRTC.
+    // This should remain disabled for production builds.
+    //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
 
     _peerConnections = [NSMutableDictionary new];
     _mediaStreams = [NSMutableDictionary new];
